@@ -1,0 +1,22 @@
+# Copy this file to config/paths.local.yaml and point each entry to your local files.
+# Do not commit config/paths.local.yaml.
+
+data:
+  raw_snRNA_matrix_dir: data/raw/snRNA-seq_filter_matrix/
+  raw_spatial_matrix_dir: data/raw/stereo-seq_filter_matrix/
+  spatial_mask_h5ad: data/raw/spatial_mask_file.h5ad
+  human_reference_rds: data/external/human_reference.rds
+  mouse_reference_rds: data/external/mouse_reference.rds
+  cattle_reference_rds: data/external/cattle_reference.rds
+  sc_reference_h5ad: data/processed/sc_reference_file.h5ad
+  sc_reference_rds: data/processed/sc_reference_file.rds
+  excitatory_neuron_rds: data/processed/excitatory_neuron_file.rds
+  spatial_bin100_h5ad: data/processed/spatial_bin100_file.h5ad
+
+results:
+  figures_dir: results/figures/
+  tacco_dir: results/tacco/
+  spateo_dir: results/spateo/
+  neuronchat_dir: results/neuronchat/
+  pyscenic_dir: results/pyscenic/
+  go_dir: results/go/

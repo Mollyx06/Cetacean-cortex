@@ -1,0 +1,17 @@
+anndata
+arboreto
+ctxcore
+dask[distributed]
+matplotlib
+networkx
+numpy
+opencv-python
+pandas
+plotly
+pyscenic
+scanpy
+scipy
+seaborn
+spateo-release
+statsmodels
+tacco
