@@ -1,56 +1,47 @@
-# Cetacean-cortex
+# Cetacean cortex: manuscript analysis workflows
 
-Single-nucleus and spatial transcriptomics analysis of cetacean cortical organization, focused on prefrontal cortex (PFC) and primary visual cortex (V1) across toothed whale species and terrestrial mammal references.
+Curated analysis code accompanying **Cetacean cortex**, aligned to the manuscript dated 2026-10-30. The numbered files in this directory are the current workflow entries. Historical versions and exploratory analyses are stored locally in `_archive/` and excluded from Git by `.gitignore`.
 
-This repository contains the analysis notebooks used to generate a reproducible, GitHub-friendly workflow for the cetacean cortex project. Large intermediate objects and raw sequencing outputs are not included. In notebooks and documentation, local absolute paths have been replaced with method-based placeholders such as `data/processed/sc_reference_file`, `results/tacco/tacco_output_file`, and `results/figures/figure_panel_file`.
+This is a collection of analysis workflows, not a single automatic pipeline. Data, manually curated annotations, orthologue tables, FASTA sequences, and cisTarget databases are not bundled. Configure paths and metadata columns before running. The notebooks retain dataset-specific sample and cluster-label examples; those labels must be supplied from the corresponding curated dataset, not reused blindly on a new clustering.
 
-## Project Structure
+## Workflow order
 
-```text
-Cetacean-cortex/
-├── notebooks/              # Ordered analysis notebooks
-├── colabs/                 # Existing Colab-oriented notebooks
-├── data/                   # Data manifest and placeholder layout only
-├── results/                # Output manifest and placeholder layout only
-├── docs/                   # Workflow and method notes
-├── config/                 # Example path/configuration files
-├── requirements.txt        # Python package dependencies
-└── README.md
-```
+| Entry | Analysis | Required input | Main output |
+|---|---|---|---|
+| [01_load_counts.ipynb](01_load_counts.ipynb) | Load snRNA-seq matrices | Filtered Matrix Market matrices, barcodes and genes from the v3 pipeline | AnnData count objects |
+| [02_qc_harmony_clustering.ipynb](02_qc_harmony_clustering.ipynb) | QC, normalization and clustering | Count objects from the individual libraries | Integrated Seurat objects and marker tables |
+| [03_cell_annotation.ipynb](03_cell_annotation.ipynb) | Cell annotation and excitatory-neuron integration | QC-passed objects and curated cluster labels | Annotated whole-cortex and excitatory-neuron objects |
+| [04_markers_and_cell_figures.ipynb](04_markers_and_cell_figures.ipynb) | Marker selection and cell-atlas figures | Annotated Seurat objects | Marker tables, UMAPs, dot plots and composition plots |
+| [05_metaneighbor_ortholog.R](05_metaneighbor_ortholog.R) | Cross-species MetaNeighbor | Species count objects, study/type labels and the six-taxon orthologue table | Strict orthologue table and AUROC matrices/heatmaps |
+| [06_samap_excitatory.py](06_samap_excitatory.py) | SAMap integration | Excitatory-neuron AnnData objects, gene-matched protein FASTAs and official SAMap checkout | Pairwise homology maps and saved SAMap object |
+| [07_tacco_projection.py](07_tacco_projection.py) | Spatial annotation transfer | Annotated reference and spatial section AnnData objects | Projections using empirical and 0.05-floor priors, in separate output folders |
+| [08_spatial_figures.ipynb](08_spatial_figures.ipynb) | Spatial expression figures | Spatial objects with curated anatomical labels | Spatial expression plots |
+| [09_pyscenic_aucell.ipynb](09_pyscenic_aucell.ipynb) | GRNBoost2, motif pruning and AUCell | Raw counts in `layers['counts']`, matching TF list, motif annotations and ranking databases | Adjacencies, motif-pruned regulons and cell-by-regulon AUC matrix |
+| [10_go_enrichment.ipynb](10_go_enrichment.ipynb) | GO Biological Process enrichment | Marker genes and an expressed-gene universe already mapped to human symbols | BH-adjusted enrichment tables and figures |
+| [11_bdnf_adcyap1_codetection.R](11_bdnf_adcyap1_codetection.R) | BDNF/ADCYAP1 co-detection | Raw-count Seurat objects and the strict orthologue table produced by step 05 | Threshold-1/2 counts, observed/expected frequencies and descriptive plots |
 
-## Analysis Workflow
+Steps 05–11 are downstream branches: they do not all consume the output of the immediately preceding number. In particular, step 11 needs the strict gene map from step 05. Spatial files require upstream processing and anatomical labels that these scripts do not generate.
 
-The main workflow is organized as numbered notebooks:
+## Running the workflows
 
-| Step | Notebook | Purpose |
-|---|---|---|
-| 01 | `01_load_V3.ipynb` | Load snRNA-seq count matrices and generate per-sample objects. |
-| 02 | `02_pre.ipynb` | Quality control, preprocessing, integration, clustering, and marker detection. |
-| 03 | `03_annotation.ipynb` | Cell-type annotation and excitatory neuron subset extraction. |
-| 04 | `04_Fig2_anno.ipynb` | UMAP, marker, proportion, and annotation evidence plots. |
-| 05 | `05_metaneighbor_*.ipynb` | Cross-species similarity analysis with MetaNeighbor. |
-| 06 | `06_tacco.ipynb` | Spatial projection of snRNA-seq states onto Stereo-seq bins with TACCO. |
-| 07 | `07_Fig3_vis.ipynb` | Spatial and marker visualizations for Fig. 3 analyses. |
-| 08 | `08_spateo.ipynb` | Spatial domain and digital layer analysis with Spateo. |
-| 09 | `09_Fig4_cci.ipynb` | Cell-cell communication analysis and NeuronChat visualization. |
-| 10 | `10_scenic_py.ipynb` | pySCENIC regulon inference and transcription-factor network analysis. |
-| 11 | `11_GO_ana.ipynb` | Gene Ontology enrichment analysis. |
-| 12 | `12_Fig5_co&bu.ipynb` | BDNF/ADCYAP1 co-expression and comparative visualization. |
+1. Supply the input data and edit the configuration blocks and dataset paths. Paths under `/data/work/` and `/data/input/` describe the original analysis server; they are not files included in this repository.
+2. Open R notebooks with an IRkernel kernel and Python notebooks with the relevant Python kernel. Run cells in order after confirming the sample-specific paths and annotation maps.
+3. Run standalone files with `Rscript 05_metaneighbor_ortholog.R`, `python 06_samap_excitatory.py`, `python 07_tacco_projection.py`, or `Rscript 11_bdnf_adcyap1_codetection.R` in the appropriate environment.
 
-See [docs/workflow.md](docs/workflow.md) for a more detailed description of inputs, outputs, and placeholder file names.
+The six-taxon orthologue table must have columns `ortholog_id`, `Bovine`, `NA`, `SA`, `SB`, `Human`, and `Mouse`. Its identifiers must match the count-matrix features. MetaNeighbor reports the actual shared-group count; compare it with the manuscript's 10,707 single-cell and 7,753 spatial groups, rather than forcing the number to match.
 
-## Data Availability
+SAMap uses the [official workflow](https://github.com/atarashansky/SAMap): pairwise protein FASTAs are passed to the official `map_genes.sh`, followed by `SAMAP.run()` with default algorithm arguments. Configure the checkout path, FASTA paths and AnnData paths in the script. FASTA gene identifiers must match the corresponding expression features. Existing pairwise maps are reused, so regenerate them when inputs change.
 
-Raw sequencing data, large `.h5ad`/`.rds` objects, spatial images, intermediate model outputs, and generated figure files are intentionally excluded from Git. The expected layout and placeholder names are described in [data/README.md](data/README.md) and [results/README.md](results/README.md).
+## Software
 
-## Environment
+Manuscript versions for the included methods are Seurat v4, MetaNeighbor v1.4.0, TACCO v0.3.0, pySCENIC v0.12, clusterProfiler v4.8 and SAMap v3.0.1. These are reported manuscript versions, not an environment lock generated by executing the code. Additional dependencies include Harmony, Matrix, SingleCellExperiment, pheatmap, org.Hs.eg.db, sceasy, reticulate, Scanpy, AnnData, NumPy, pandas, SciPy, matplotlib, seaborn, Arboreto, ctxcore and Dask. Plotting notebooks also use the R packages imported in their first cells.
 
-The workflow uses a mixed Python/R ecosystem. Python dependencies are listed in [requirements.txt](requirements.txt). R packages used across notebooks include Seurat, dplyr, ggplot2, patchwork, MetaNeighbor, NeuronChat, clusterProfiler, org.* annotation packages, and related visualization utilities.
+Use separate environments for SAMap and pySCENIC/TACCO as needed. SAMap 3.0.1 requires Python 3.11 or newer and BLAST+; its script checks the installed `sc-samap` version. Record package/session versions when rerunning the analyses.
 
-For a new machine, copy [config/paths.example.yaml](config/paths.example.yaml) to `config/paths.local.yaml` and map each placeholder to the local data location.
+## Coverage and validation
 
-## Notes
+See [MANUSCRIPT_COVERAGE.md](MANUSCRIPT_COVERAGE.md) for retained analyses, missing methodological details and upstream steps. Formatting and syntax checks do not establish reproduction of the manuscript results; full analysis has not been rerun with the original data in this workspace.
 
-- Notebook execution outputs were cleared to keep the repository lightweight.
-- Local absolute paths were replaced with repository-relative placeholders.
-- Manuscript draft and supplementary method files were used only to organize the public-facing workflow description and are not included in this repository.
+## Updating the GitHub repository
+
+Use this directory's numbered files, README, coverage document and `.gitignore` as the current source set. Replace obsolete root-level scripts in the existing repository instead of overlaying the new files and keeping both versions. `.gitignore` excludes the local archive and macOS sidecars; it does not automatically remove files already tracked by Git. The archived `FILE_MAP.json` records the previous-to-current filenames. No remote push is performed by this preparation step.

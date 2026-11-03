@@ -1,55 +1,21 @@
-# Local configuration
-config/paths.local.yaml
-.env
-.env.*
-
-# Codex/local helper files
-.codex/
-
-# Python
-__pycache__/
-*.py[cod]
-.ipynb_checkpoints/
-.pytest_cache/
-
-# R
-.Rhistory
-.RData
-.Rproj.user/
-
-# Large analysis data
-*.h5ad
-*.h5
-*.loom
-*.rds
-*.RDS
-*.rda
-*.RData
-*.mtx
-*.bam
-*.bai
-*.fastq
-*.fastq.gz
-*.fq
-*.fq.gz
-
-# Generated outputs
-results/**
-!results/
-!results/README.md
-
-data/**
-!data/
-!data/README.md
-
-# Figures can be regenerated from notebooks
-*.png
-*.pdf
-*.svg
-*.tiff
-*.tif
-
-# Office/editor temporary files
-~$*
+# Local historical workflows are not part of the manuscript release.
+/_archive/
 .DS_Store
-Thumbs.db
+._*
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+# Analysis data and generated binary objects
+data/
+results/
+outputs/
+*.h5ad
+*.rds
+*.Rds
+*.RData
+*.loom
+*.pkl
+*.fa
+*.fasta
+*.feather
